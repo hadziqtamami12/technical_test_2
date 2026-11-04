@@ -109,3 +109,4 @@ Meskipun sistem telah memenuhi spesifikasi enterprise, terdapat area teknis yang
 4. **Rate Limiting & Anti-Brute Force**
    - *Kondisi Saat Ini*: Belum ada batasan frekuensi request per menit per IP untuk endpoint checkout.
    - *Roadmap*: Menerapkan middleware rate limiter (e.g. `throttle:60,1` untuk checkout) untuk mencegah serangan DoS yang menahan lock database.
+
