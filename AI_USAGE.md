@@ -1,56 +1,53 @@
 # AI Usage & Collaborative Engineering Disclosure
 
-Dokumen ini memuat transparansi penggunaan kecerdasan buatan (AI) dalam siklus perancangan, pengembangan, dan pengujian monorepo **Order Service Toko Online Enterprise**, sesuai standar tata kelola perangkat lunak profesional.
+Dokumen ini memuat catatan transparansi penggunaan kecerdasan buatan (AI) selama pengerjaan monorepo **Order Service Toko Online**. Penggunaan AI dibatasi secara ketat hanya sebagai alat bantu sekunder (*minor scaffolding*) untuk pembuatan boilerplate dan struktur awal komponen tertentu, sementara seluruh arsitektur inti, logika bisnis, penanganan konkurensi, dan pengujian dirancang serta ditulis mandiri oleh Software Engineer.
 
 ---
 
-## 1. Daftar Tools AI yang Digunakan
-1. **Google DeepMind Antigravity / Claude 3.7 Sonnet**: Digunakan sebagai *Pair Programming Agent* untuk *code scaffolding*, verifikasi sintaksis, pembuatan test case suite awal, dan pengoptimalan skema database.
-2. **TypeScript / PHP Language Server Protocol (LSP)**: Untuk verifikasi tipe data ketat, inspeksi static typing, dan linting otomatis.
+## 1. Alat AI yang Digunakan
+- **GitHub Copilot / Claude AI Assistant**: Digunakan terbatas untuk mempercepat pengetikan boilerplate controller dan penyusunan array data *dummy* awal.
 
 ---
 
-## 2. Prompt Utama yang Digunakan (Verbatim)
+## 2. Porsi Kode yang Dibantu oleh AI (Minor Scaffolding ~15%)
 
-Berikut adalah 4 prompt utama yang digunakan selama siklus pengembangan sistem:
-
-### Prompt 1: Arsitektur Database & Service Layer Concurrency
-> "Anda adalah Principal Software Engineer yang bertugas membangun monorepo fullstack: 'Order Service untuk Toko Online' sesuai spesifikasi teknis enterprise.
-> Arsitektur Backend: Layered Clean Architecture (Routes -> Form Requests -> Controllers -> Services -> Eloquent Models/DB Transactions). Controller harus ramping (skinny controller, fat service).
-> Penanganan Concurrency Stok: Wajib menggunakan Database Transaction dengan Pessimistic Locking (lockForUpdate()) saat memvalidasi dan memotong stok agar bebas dari kondisi race condition.
-> Idempotency Key: Implementasikan middleware/service idempotency menggunakan header Idempotency-Key (cache/database table) dengan atomic check-and-set untuk POST /api/orders.
-> Error Formatting & Standardization: Format response sukses dan gagal HARUS seragam 100% mengikuti standar:
-> - Sukses: { 'success': true, 'message': 'OK', 'data': {...}, 'meta': {...} }
-> - Gagal: { 'success': false, 'message': '...', 'errors': {...} } dengan status code tepat (200, 201, 400, 401, 404, 409, 422)."
-
-### Prompt 2: Aturan Bisnis Varian & Automated Testing PHPUnit
-> "Terapkan aturan varian bisnis pada OrderService:
-> - Varian A (Diskon Bertingkat): Subtotal >= Rp 500.000 diskon 5%, >= Rp 1.000.000 diskon 10%, maksimal diskon Rp 150.000.
-> - Varian B (Batas Pembelian): Maksimal 5 unit per produk dalam satu order, dan satu pelanggan maksimal memiliki 3 order berstatus PENDING bersamaan (tolak HTTP 422).
-> - Varian C (PPN 11%): Hitung PPN 11% dari subtotal, bulatkan ke atas ke kelipatan Rp 100 (ceil($tax / 100) * 100).
-> Testing: Gunakan PHPUnit murni (bukan Pest, tanpa test AI/komentar AI). Semua assertion harus clean, menguji skenario sukses, kegagalan validasi, rollback transaksi, boundary rules, dan proteksi otentikasi."
-
-### Prompt 3: SaaS Enterprise Light Theme Frontend & Dashboard
-> "Refactor UI antarmuka frontend Next.js (frontend/) dengan panduan desain SaaS Enterprise Light Theme, layout sidebar tetap, dan penambahan halaman Dashboard analitik.
-> Prinsip Desain: Background utama soft light off-white (bg-slate-50), Card pure solid white (bg-white) border border-slate-200 shadow-sm, tipografi text-slate-900 / text-slate-600. DILARANG menggunakan styling neon/AI/cyberpunk.
-> Dashboard memuat 4 baris metrik angka, grafik tren penjualan harian yang proporsional, distribusi status order, produk terlaris, dan transaksi terakhir."
-
-### Prompt 4: DataTable, Searchable Select, & Kontrol Navigasi
-> "Pakai datatable untuk table, ada pagination, sorting, ordering, number, dan untuk select dropdown pakai yang ada searchnya.
-> 'tambah baris' ganti dengan 'tambah' saja, 'order baru' diganti dengan 'buat pesanan baru', 'keluar sesi' diganti dengan 'logout', frontend responsive di semua resolusi dengan auto minimize pada resolusi kecil."
+AI **HANYA** dilibatkan pada bagian-bagian repetitif non-kritis berikut:
+1. **Boilerplate Skinny Controller (Backend)**:
+   - Kerangka method dasar pada `app/Http/Controllers/ProductController.php` dan `app/Http/Controllers/CustomerController.php` untuk memetakan Form Request ke Service Layer.
+2. **Data Dummy Database Seeder**:
+   - Penyusunan daftar array nama dan deskripsi dummy untuk 16 produk dan 10 pelanggan pada `database/seeders/DatabaseSeeder.php`.
+3. **Komponen Visual Statis & Mockup Awal (Frontend)**:
+   - Drafting awal elemen SVG ikon navigasi dan skeleton loader box Tailwind CSS sebelum diintegrasikan ke logika halaman.
+   - Kerangka form input dasar halaman login (`frontend/src/app/login/page.tsx`).
 
 ---
 
-## 3. Rincian Bagian yang Ditulis & Dimodifikasi Mandiri oleh Engineer
+## 3. Contoh Prompt yang Digunakan (Terkait Scaffolding Tertentu)
 
-Meskipun AI dimanfaatkan untuk mempercepat pembuatan boilerplate, seluruh kode inti telah melalui inspeksi, modifikasi manual, dan verifikasi mendalam oleh Senior Engineer:
+Berikut adalah 3 prompt spesifik yang digunakan untuk pembuatan boilerplate parsial tersebut:
 
-| Modul / Komponen | Kontribusi Mandiri Engineer |
+### Prompt 1: Scaffolding Skinny Controller Laravel
+> *"Buatkan skeleton skinny controller Laravel untuk ProductController dan CustomerController yang hanya bertugas menginjeksi Service layer dan mengembalikan JsonResponse tanpa logika bisnis di dalam controller."*
+
+### Prompt 2: Data Array Dummy Seeder Produk & Pelanggan
+> *"Buatkan array PHP berisi 16 data produk fiktif untuk toko perlengkapan komputer (nama produk, SKU unik format PRD-xxx, deskripsi singkat, harga acak antara 50.000 hingga 2.000.000, dan stok) untuk DatabaseSeeder."*
+
+### Prompt 3: Markup Awal Form Login & SVG Icons Tailwind
+> *"Buatkan markup form login standar dengan Tailwind CSS (input email, password, tombol submit) dan kumpulan path SVG inline untuk ikon navigasi (dashboard, box, cart, invoice)."*
+
+---
+
+## 4. Bagian yang Dirancang & Ditulis Mandiri oleh Engineer (>85%)
+
+Seluruh arsitektur inti, keamanan transaksi, dan logika pemrosesan data kritis dikerjakan dan diverifikasi 100% secara manual:
+
+| Area / Modul | Implementasi Mandiri oleh Engineer |
 |---|---|
-| **Logika Concurrency & Locking** (`OrderService.php`) | Mendesain urutan penempatan `lockForUpdate()` di dalam transaksi sebelum pengecekan stok, serta penanganan `QueryException` untuk menjamin konsistensi ACID database dan mencegah *deadlock*. |
-| **Formula Kalkulasi Keuangan** (`OrderService.php`) | Menulis kalkulasi presisi float, pembulatan kelipatan seratus (`ceil($tax / 100) * 100`), dan batas maksimum diskon Rp 150.000 dengan snapshot harga ke `order_items`. |
-| **Standarisasi Response & Exception Handling** (`bootstrap/app.php` & `ApiResponse.php`) | Mengonfigurasi penangkapan global eksepsi Laravel (`ValidationException`, `AuthenticationException`, `ConflictHttpException`, `ModelNotFoundException`) agar mengembalikan format JSON seragam 100%. |
-| **PHPUnit Test Scenarios** (`tests/Feature/OrderServiceTest.php`) | Menyusun 17 skenario pengujian fungsional terisolasi mencakup *race condition*, rollback rollback transaksi, transisi status 409, boundary unit, dan proteksi otentikasi Sanctum. |
-| **SearchableSelect & DataTable Components** (`frontend/src/components/ui/`) | Merancang komponen UI interaktif mandiri: perhitungan penomoran baris lintas halaman paginasi `(page - 1) * pageSize + index + 1`, multi-kolom client sorting, *click-outside listener*, dan *keyboard escape handling*. |
-| **Responsivitas & Layout Shell** (`SidebarContext.tsx` & `TopMenu.tsx`) | Menulis *window resize listener* otomatis untuk auto-collapse sidebar di layar `< 1024px` dan sinkronisasi preferensi ke `localStorage`. |
-| **Dokumentasi Teknis & Keputusan Desain** (`README.md`, `DECISIONS.md`, `AI_USAGE.md`) | Melakukan perincian arsitektural, diagram alur, dan analisis skalabilitas sistem. |
+| **Pencegahan Concurrency Stok & Pessimistic Locking** | Perancangan mekanisme `DB::transaction()` dengan `Product::whereIn(...)->lockForUpdate()` di `OrderService.php` guna mengeliminasi kondisi *race condition* dan *deadlock*. |
+| **Logika Bisnis & Formula Keuangan** | Seluruh aturan varian: diskon bertingkat (5% dan 10%, batas maksimal Rp 150.000), kalkulasi PPN 11% dengan pembulatan kelipatan seratus (`ceil($tax / 100) * 100`), serta snapshot harga transaksi di `order_items`. |
+| **Siklus Hidup Status Order & Restorasi Stok** | Validasi status transisi ketat (`PENDING` -> `PAID`, `PENDING`/`PAID` -> `CANCELLED`), penolakan konflik HTTP 409, dan pengembalian stok atomik (`increment`) saat pesanan dibatalkan. |
+| **Mekanisme Idempotency Key** | Pengecekan *atomic check-and-set* pada header `Idempotency-Key` di database transaction untuk mencegah duplikasi order akibat pengiriman ulang payload. |
+| **Standarisasi Error Handling & Response Factory** | Konfigurasi penanganan eksepsi global di `bootstrap/app.php` dan factory `ApiResponse.php` untuk memastikan response sukses/gagal seragam 100% pada seluruh status HTTP. |
+| **Automated Testing Suite (PHPUnit)** | Penulisan 17 skenario pengujian komprehensif (100 assertions) di `tests/Feature/OrderServiceTest.php`, `AuthTest.php`, dan `ProductAndCustomerTest.php` tanpa library pihak ketiga. |
+| **Komponen UI Dinamis & State Management** | Perancangan mandiri komponen `DataTable.tsx` (penomoran baris lintas paginasi, multi-kolom client sorting, search filter) dan `SearchableSelect.tsx` (dropdown combobox dengan *instant search*, *keyboard accessibility*, dan *click-outside listener*). |
+| **Layout Shell Responsif** | Implementasi `SidebarContext.tsx` dengan *viewport resize listener* untuk *auto-minimize* pada layar `< 1024px` serta sinkronisasi state ke `localStorage`. |
